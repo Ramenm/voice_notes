@@ -1,17 +1,13 @@
 import datetime
-import threading
-from kivymd.app import MDApp
-from kivy.uix.pagelayout import PageLayout
-from kivy.uix.gridlayout import GridLayout
-from kivymd.uix.boxlayout import MDBoxLayout
+import os
+import speech_recognition as sr
 from kivy.core.window import Window
 from kivy.uix.button import Button
-from kivymd.uix.button import MDFillRoundFlatButton
-from kivymd.uix.label import MDLabel
-from kivy.uix.image import Image
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.pagelayout import PageLayout
 from kivy.uix.scrollview import ScrollView
-import speech_recognition as sr
-import os
+from kivymd.app import MDApp
+from kivymd.uix.label import MDLabel
 
 
 class Voice_NotesApp(MDApp):
@@ -19,6 +15,9 @@ class Voice_NotesApp(MDApp):
     err_msg = None
     r = sr.Recognizer()
     m = sr.Microphone()
+    SPLIT_WORD = 'пип'
+    FOLDER = 'other'
+
     def build(self):
         layout = PageLayout()
 
@@ -60,14 +59,11 @@ class Voice_NotesApp(MDApp):
         return layout
 
     def open_folder(self, instance):
+        self.page3_grid.clear_widgets()
         folder = instance.text
-        files = [f for f in os.listdir(r'./audio/'+folder) if f.endswith('.wav')]
+        files = [f for f in os.listdir(f'./audio/{folder}') if f.endswith('.wav')]
         for f in files:
             self.page3_grid.add_widget(Button(text=str(f[:-4]), size_hint_y=None, height=50, ))
-
-    def close_folder(self, instance):
-        pass
-
 
     def start_record(self, instance):
         instance.text = 'Recording'
@@ -88,9 +84,9 @@ class Voice_NotesApp(MDApp):
     def record_callback(self, recognizer, audio):
         try:
             text = recognizer.recognize_google(audio, language='ru')
-            self.filename = ("{}.wav".format(str(text) if text.count(' ')>=2 else str(datetime.datetime.now()).replace(' ', '-').replace(':','-')))
-            self.text = self.filename[::-4]
-            with open('./audio/other/'+self.filename, "wb") as f:
+            self.filename = ("{}.wav".format(str(text) if text.count(' ')>=3 else str(datetime.datetime.now()).replace(' ', '-').replace(':','-')))
+            self.FOLDER, self.text = self.filename[::-4].split(self.SPLIT_WORD)
+            with open(f'./audio/{self.FOLDER_WORD}/{self.filename}' "wb") as f:
                 f.write(audio.get_wav_data())
             self.page2_grid.add_widget(Button(text=self.text, size_hint_y=None, height=50))
             self.page1_button.text = 'Click to stop record voice'
@@ -99,7 +95,7 @@ class Voice_NotesApp(MDApp):
         except sr.UnknownValueError:
             self.err_msg = "Google Speech Recognition could not understand audio"
         except sr.RequestError as e:
-            self.err_msg = "Could not request results from Google Speech Recognition service; {0}".format(e)
+            self.err_msg = f"Could not request results from Google Speech Recognition service; {e}"
 
     def hook_keyboard(self, window, key, *args):
         if key == 27:
