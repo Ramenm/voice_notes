@@ -22,9 +22,9 @@ class Voice_NotesApp(MDApp):
     def build(self):
         layout = PageLayout()
 
-        page1 = GridLayout(rows = 2)
-        page1_label = MDLabel(text='Приветики', pos_hint={"center_x": 0.5,"center_y":0.5}, halign='center')
-        page1_button = Button(text='Начать запись голоса', size_hint=(.5, .1),
+        page1 = GridLayout(rows=2)
+        page1_label = MDLabel(text='Hello there', pos_hint={"center_x": 0.5,"center_y":0.5}, halign='center')
+        page1_button = Button(text='Start voice record', size_hint=(.5, .1),
                               pos_hint={"center_x": 0.5, "center_y": 0.2},
                               )
         page1_button.bind(on_press=self.start_record)
@@ -32,12 +32,14 @@ class Voice_NotesApp(MDApp):
         page1.add_widget(page1_button)
 
         page2 = ScrollView(do_scroll_y=True, do_scroll_x=False, size_hint=(1, None), size=(Window.width, Window.height))
-        page2_grid = GridLayout(cols=1, spacing=1, size_hint_y=None)
+        page2_grid = GridLayout(cols=2, spacing=1, size_hint_y=None)
         page2_grid.bind(minimum_height=page2_grid.setter('height'))
-        #check current dictionary and find .wav files
-        files = [f for f in os.listdir('.') if os.path.isfile(f) and f.endswith('.wav')]
-        for name in files:
-            page2_grid.add_widget(Button(text=str(name[:-4]), size_hint_y=None, height=50))
+        #check current folders and find .wav files
+        folders = [f for f in os.listdir('./audio')]
+        for folder in folders:
+            btn = Button(text=str(folder), size_hint_y=None, height=50, )
+            page2_grid.add_widget(btn)
+            btn.bind(on_press=self.open_folder)
         page2.add_widget(page2_grid)
 
         #3 PAGE
@@ -85,9 +87,10 @@ class Voice_NotesApp(MDApp):
 
     def record_callback(self, recognizer, audio):
         try:
-            self.text = recognizer.recognize_google(audio, language='ru')
-            self.filename = ("{}.wav".format(str(self.text) if self.text.count(' ')>=2 else str(datetime.datetime.now()).replace(' ', '-').replace(':','-')))
-            with open(self.filename, "wb") as f:
+            text = recognizer.recognize_google(audio, language='ru')
+            self.filename = ("{}.wav".format(str(text) if text.count(' ')>=2 else str(datetime.datetime.now()).replace(' ', '-').replace(':','-')))
+            self.text = self.filename[::-4]
+            with open('./audio/other/'+self.filename, "wb") as f:
                 f.write(audio.get_wav_data())
             self.page2_grid.add_widget(Button(text=self.text, size_hint_y=None, height=50))
             self.page1_button.text = 'Click to stop record voice'
