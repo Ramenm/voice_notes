@@ -15,7 +15,7 @@ class Voice_NotesApp(MDApp):
     err_msg = None
     r = sr.Recognizer()
     m = sr.Microphone()
-    SPLIT_WORD = 'пип'
+    SPLIT_WORD = ' пип '
     FOLDER = 'other'
 
     def build(self):
@@ -85,7 +85,11 @@ class Voice_NotesApp(MDApp):
         try:
             text = recognizer.recognize_google(audio, language='ru')
             self.filename = ("{}.wav".format(str(text) if text.count(' ')>=3 else str(datetime.datetime.now()).replace(' ', '-').replace(':','-')))
-            self.FOLDER, self.text = self.filename[::-4].split(self.SPLIT_WORD)
+            splitted_text = self.filename[::-4].split(self.SPLIT_WORD)
+            if len(splitted_text)>2:
+                self.FOLDER, self.text = splitted_text
+            else:
+                self.text = splitted_text
             with open(f'./audio/{self.FOLDER_WORD}/{self.filename}' "wb") as f:
                 f.write(audio.get_wav_data())
             self.page2_grid.add_widget(Button(text=self.text, size_hint_y=None, height=50))
